@@ -1,0 +1,197 @@
+local vu26 = {windowcount = 0}
+local vu27 = {}
+local vu28 = {}
+local vu29 = game:GetService('Players').LocalPlayer:GetMouse()
+local vu30 = game:GetService('UserInputService')
+local vu31 = game:GetService('RunService').Heartbeat
+
+-- 窗口拖动功能
+function vu27.new(pu32)
+    local v33, v34 = pcall(function() return pu32.MouseEnter end)
+    if v33 then
+        pu32.Active = true
+        v34:connect(function()
+            local vu37 = pu32.InputBegan:connect(function(p35)
+                if p35.UserInputType == Enum.UserInputType.MouseButton1 or p35.UserInputType == Enum.UserInputType.Touch then
+                    local v36 = Vector2.new(vu29.X - pu32.AbsolutePosition.X, vu29.Y - pu32.AbsolutePosition.Y)
+                    while vu31:wait() and vu30:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+                        pu32:TweenPosition(UDim2.new(0, vu29.X - v36.X + pu32.Size.X.Offset * pu32.AnchorPoint.X, 0, vu29.Y - v36.Y + pu32.Size.Y.Offset * pu32.AnchorPoint.Y), 'Out', 'Quad', 0.1, true)
+                    end
+                end
+            end)
+            local vu38 = nil
+            vu38 = pu32.MouseLeave:connect(function()
+                vu37:disconnect()
+                vu38:disconnect()
+            end)
+        end)
+    end
+end
+
+-- 自动尺寸调整
+function vu28.new(pu39, pu40)
+    pu39:GetPropertyChangedSignal('AbsoluteSize'):connect(function()
+        pu40.Size = UDim2.new(pu40.Size.X.Scale, pu40.Size.X.Offset, pu40.Size.Y.Scale, pu39.AbsoluteSize.Y)
+    end)
+end
+
+local vu41 = {
+    txtcolor = Color3.fromRGB(255, 255, 255),
+    underline = Color3.fromRGB(0, 255, 140),
+    barcolor = Color3.fromRGB(40, 40, 40),
+    bgcolor = Color3.fromRGB(30, 30, 30),
+}
+
+function vu26.Create(_, p42, p43)
+    local v44 = Instance.new(p42)
+    for v47, v48 in pairs(p43) do
+        if v47 ~= 'Parent' then
+            v44[v47] = v48
+        end
+    end
+    v44.Parent = p43.Parent
+    return v44
+end
+
+function vu26.CreateWindow(p49, p50)
+    assert(p50.text, 'no name')
+    local vu51 = {count = 0, toggles = {}, closed = false}
+    local vu52 = p50 or {}
+    setmetatable(vu52, {__index = vu41})
+
+    p49.windowcount = p49.windowcount + 1
+    vu26.gui = vu26.gui or p49:Create('ScreenGui', {Name = 'UILibrary', Parent = game:GetService('CoreGui')})
+    
+    vu51.frame = p49:Create('Frame', {
+        Name = vu52.text, Parent = p49.gui, Active = true,
+        Size = UDim2.new(0, 190, 0, 30),
+        Position = UDim2.new(0, 15 + (200 * p49.windowcount - 200), 0, 15),
+        BackgroundColor3 = vu52.barcolor, BorderSizePixel = 0,
+    })
+
+    vu51.background = p49:Create('Frame', {
+        Name = 'Background', Parent = vu51.frame, BorderSizePixel = 0,
+        BackgroundColor3 = vu52.bgcolor, Position = UDim2.new(0, 0, 1, 0),
+        Size = UDim2.new(1, 0, 0, 25), ClipsDescendants = true,
+    })
+
+    vu51.container = p49:Create('Frame', {
+        Name = 'Container', Parent = vu51.frame, BorderSizePixel = 0,
+        BackgroundColor3 = vu52.bgcolor, Position = UDim2.new(0, 0, 1, 0),
+        Size = UDim2.new(1, 0, 0, 25), ClipsDescendants = true,
+    })
+
+    vu51.organizer = p49:Create('UIListLayout', {Name = 'Sorter', SortOrder = Enum.SortOrder.LayoutOrder, Parent = vu51.container})
+    vu51.padder = p49:Create('UIPadding', {Name = 'Padding', PaddingLeft = UDim.new(0, 10), PaddingTop = UDim.new(0, 5), Parent = vu51.container})
+
+    p49:Create('Frame', {
+        Name = 'Underline', Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 1, -1),
+        BorderSizePixel = 0, BackgroundColor3 = vu52.underline, Parent = vu51.frame,
+    })
+
+    local vu54 = p49:Create('TextButton', {
+        Name = 'Toggle', ZIndex = 2, BackgroundTransparency = 1,
+        Position = UDim2.new(1, -25, 0, 0), Size = UDim2.new(0, 25, 1, 0),
+        Text = '-', TextSize = 17, TextColor3 = vu52.txtcolor, Font = Enum.Font.FredokaOne, Parent = vu51.frame,
+    })
+
+    vu54.MouseButton1Click:connect(function()
+        vu51.closed = not vu51.closed
+        vu54.Text = vu51.closed and '+' or '-'
+        if vu51.closed then vu51:Resize(true, UDim2.new(1, 0, 0, 0)) else vu51:Resize(true) end
+    end)
+
+    p49:Create('TextLabel', {
+        Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, BorderSizePixel = 0,
+        TextColor3 = vu52.bartextcolor or Color3.fromRGB(255, 255, 255),
+        TextSize = 17, Font = Enum.Font.FredokaOne, Text = vu52.text or 'window', Name = 'Window', Parent = vu51.frame,
+    })
+
+    vu27.new(vu51.frame)
+    vu28.new(vu51.background, vu51.container)
+
+    local function vu60()
+        local v58 = 0
+        for _, v59 in pairs(vu51.container:GetChildren()) do
+            if not (v59:IsA('UIListLayout') or v59:IsA('UIPadding')) then
+                v58 = v58 + v59.AbsoluteSize.Y
+            end
+        end
+        return UDim2.new(1, 0, 0, v58 + 10)
+    end
+
+    function vu51.Resize(p61, p62, p63)
+        local v64 = p63 or vu60()
+        p61.container.ClipsDescendants = true
+        if p62 then p61.background:TweenSize(v64, 'Out', 'Sine', 0.5, true) else p61.background.Size = v64 end
+    end
+
+    -- 添加开关
+    function vu51.AddToggle(pu65, pu66, p67)
+        pu65.count = pu65.count + 1
+        local vu68 = p67 or function() end
+        local v69 = vu26:Create('TextLabel', {
+            Text = pu66, Size = UDim2.new(1, -10, 0, 20), BackgroundTransparency = 1,
+            TextColor3 = Color3.fromRGB(255, 255, 255), TextXAlignment = Enum.TextXAlignment.Left,
+            LayoutOrder = pu65.count, TextSize = 14, Font = Enum.Font.FredokaOne, Parent = pu65.container,
+        })
+        local vu70 = vu26:Create('TextButton', {
+            Text = 'OFF', TextColor3 = Color3.fromRGB(255, 25, 25), BackgroundTransparency = 1,
+            Position = UDim2.new(1, -25, 0, 0), Size = UDim2.new(0, 25, 1, 0),
+            TextSize = 17, Font = Enum.Font.FredokaOne, Parent = v69,
+        })
+        vu70.MouseButton1Click:connect(function()
+            pu65.toggles[pu66] = not pu65.toggles[pu66]
+            vu70.TextColor3 = pu65.toggles[pu66] and Color3.fromRGB(0, 255, 140) or Color3.fromRGB(255, 25, 25)
+            vu70.Text = pu65.toggles[pu66] and 'ON' or 'OFF'
+            vu68(pu65.toggles[pu66])
+        end)
+        pu65:Resize()
+        return vu70
+    end
+
+    -- 添加输入框
+    function vu51.AddBox(p71, p72, p73)
+        p71.count = p71.count + 1
+        local vu74 = p73 or function() end
+        local vu75 = vu26:Create('TextBox', {
+            PlaceholderText = p72, Size = UDim2.new(1, -10, 0, 20), BackgroundTransparency = 0.75,
+            BackgroundColor3 = Color3.fromRGB(50,50,50), TextColor3 = Color3.fromRGB(255, 255, 255),
+            TextXAlignment = Enum.TextXAlignment.Center, TextSize = 14, Text = '',
+            Font = Enum.Font.FredokaOne, LayoutOrder = p71.count, BorderSizePixel = 0, Parent = p71.container,
+        })
+        vu75.FocusLost:connect(function(...) vu74(vu75, ...) end)
+        p71:Resize()
+        return vu75
+    end
+
+    -- 添加按钮
+    function vu51.AddButton(p76, p77, p78)
+        p76.count = p76.count + 1
+        local v79 = vu26:Create('TextButton', {
+            Text = p77, Size = UDim2.new(1, -10, 0, 20), BackgroundTransparency = 1,
+            TextColor3 = Color3.fromRGB(255, 255, 255), TextXAlignment = Enum.TextXAlignment.Left,
+            TextSize = 14, Font = Enum.Font.FredokaOne, LayoutOrder = p76.count, Parent = p76.container,
+        })
+        v79.MouseButton1Click:connect(p78 or function() end)
+        p76:Resize()
+        return v79
+    end
+
+    -- 添加标签
+    function vu51.AddLabel(p80, p81)
+        p80.count = p80.count + 1
+        local v82 = game:GetService('TextService'):GetTextSize(p81, 16, Enum.Font.FredokaOne, Vector2.new(math.huge, math.huge))
+        local v83 = vu26:Create('TextLabel', {
+            Text = p81, Size = UDim2.new(1, -10, 0, v82.Y + 5), TextScaled = false,
+            BackgroundTransparency = 1, TextColor3 = Color3.fromRGB(255, 255, 255),
+            TextXAlignment = Enum.TextXAlignment.Left, TextSize = 14, Font = Enum.Font.FredokaOne,
+            LayoutOrder = p80.count, Parent = p80.container,
+        })
+        p80:Resize()
+        return v83
+    end
+
+    return vu51
+end
+
