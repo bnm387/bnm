@@ -136,7 +136,7 @@ function drag(frame, hold)
         end)
 end
 
-function library.NEWS(library, name, theme)
+function library.new(library, name, theme)
     for _, v in next, services.CoreGui:GetChildren() do
         if v.Name == "zhunzhi" then
             v:Destroy()
